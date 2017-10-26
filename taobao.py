@@ -13,13 +13,37 @@ def sleep(sleep_time):
     print('sleep:' + str(sleep_time) + 's')
 
 
-def get_source(url, time_out=15):
+def get_source(url, my_data, is_ios_header=0, time_out=15):
     """获取url的源代码,返回页面源代码"""
-    headers = {
+    header = {
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Maxthon/5.1.1.1000 Chrome/55.0.2883.75 Safari/537.36"}
-    r = requests.get(url, headers=headers, timeout=time_out)
-    print("url=", url)
-    return r.content.decode()
+    ios_header = {
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1"}
+    if is_ios_header == 0:
+        my_header = header
+    else:
+        my_header = ios_header
+    r = requests.get(url, headers=my_header, params=my_data, timeout=time_out, )
+    return r
+
+
+def get_pro_detail(pro_id):
+    """获取商品具体数据"""
+    params_data = '{"exParams":"{\"id\":\"'+str(pro_id)+'\"}","itemNumId":"'+str(pro_id)+'"}'
+    my_data = dict(appKey='12574478', t='1508764187310', sign='0629bfbee38e1d8cec9e25b4cb9afae6',
+                   api='mtop.taobao.detail.getdetail', v='6.0', ttid='2016 @ taobao_h5_2.0.0', isSec='0', ecode='0',
+                   AntiFlood='true', AntiCreep='true', H5Request='true', type='jsonp', dataType='jsonp',
+                   callback='mtopjsonp1',
+                   data=params_data)
+    url = "https://acs.m.taobao.com/h5/mtop.taobao.detail.getdetail/6.0/"
+    source = get_source(url, my_data, is_ios_header=1)
+    page_data = source.content.decode()
+    print(page_data)
+    month_count = re.findall(r'"sellCount\\":\\"(.+?)\\"', page_data)
+    print('month_count=', month_count)
+    pro_info = re.findall(r'{"基本信息.*?}]}', page_data)[0]
+    pro_info = json.loads(str(pro_info))
+    print(pro_info)
 
 
 class TaoBaoKeyword:
@@ -115,8 +139,6 @@ class TaoBaoKeyword:
 # ------------------------------------------------
 if __name__ == '__main__':
     start = time.clock()
-    x = TaoBaoKeyword("鸽药")
-    df = x.get_info('pro')
-    df.to_csv("f:/鸽药商品.csv")
+    get_pro_detail(539731830137)
     end = time.clock()
     print(end - start)
