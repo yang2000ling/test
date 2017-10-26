@@ -2,7 +2,9 @@ import os
 import sys
 import my_mongodb
 from bs4 import BeautifulSoup
+import multiprocessing as mp
 import requests
+import time
 
 sys.setrecursionlimit(1000000)
 
@@ -11,10 +13,11 @@ def get_source(my_url, time_out=15):
     """获取url的源代码,返回页面源代码"""
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Maxthon/5.1.1.1000 Chrome/55.0.2883.75 Safari/537.36"}
-    r = requests.get(url, headers=headers, timeout=time_out)
-    print("url=", my_url)
+    r = requests.get(my_url, headers=headers, timeout=time_out)
     if r.status_code == 200:
         return r.content.decode()
+    else:
+        return 1
 
 
 def read_html(data_file):
@@ -39,14 +42,33 @@ def read_html(data_file):
     return data
 
 
+def write_log(str_log):
+    str_time2s = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime(time.time()))
+    f = open('out.log', 'a')
+    f.write(str_time2s + " :" + str_log + '\n')
+    f.close()
+
+
+def get_data(start, end):
+    pool = mp.Pool(processes=4)
+    if start >> end:
+        return 1
+    for i in range(start, end):
+        try:
+            my_url = "http://book.youboy.com/com/" + str(i) + ".html"
+            print(my_url)
+            source = pool.apply_async(get_source, args=(my_url,)).get()
+            if source != 1:
+                a = read_html(source)
+                a['uid'] = i
+                x = my_mongodb.my_mongodb_se()
+                x.my_mongo_client["com_contact"]["1"].insert_one(a)
+                print("ok!")
+        except Exception as error:
+            write_log("error:"+str(i)+"  "+str(error))
+            continue
+
+
 if __name__ == '__main__':
-    url = "http://book.youboy.com/com/208539.html"
-    for i in range(700000, 800000):
-        url = "http://book.youboy.com/com/" + str(i) + ".html"
-        print(url)
-        source = get_source(url)
-        a = read_html(source)
-        a['uid'] = i
-        x = my_mongodb.my_mongodb_se()
-        x.my_mongo_client["com_contact"]["1"].insert_one(a)
-        print("ok!")
+    get_data(823444, 1500000)
+    os.system("shutdown -s -t 60")
