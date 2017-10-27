@@ -1,4 +1,4 @@
-import os
+
 import sys
 import my_mongodb
 from bs4 import BeautifulSoup
@@ -62,7 +62,7 @@ def get_data(start, end):
                 a = read_html(source)
                 a['uid'] = i
                 x = my_mongodb.my_mongodb_se()
-                x.my_mongo_client["com_contact"]["1"].insert_one(a)
+                x.my_mongo_client["com_contact"]["test"].insert_one(a)
                 print("ok!")
         except Exception as error:
             write_log("error:"+str(i)+"  "+str(error))
@@ -70,5 +70,4 @@ def get_data(start, end):
 
 
 if __name__ == '__main__':
-    get_data(823444, 1500000)
-    os.system("shutdown -s -t 60")
+    get_data(823444, 823447)

@@ -117,6 +117,6 @@ if __name__ == '__main__':
     start = time.clock()
     x = TaoBaoKeyword("鸽药")
     df = x.get_info('pro')
-    df.to_csv("f:/鸽药商品.csv")
+    print(df)
     end = time.clock()
     print(end - start)

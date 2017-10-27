@@ -65,6 +65,8 @@ class my_mongodb_se:
         return result
 
 
-'''if __name__ == '__main__':
+if __name__ == '__main__':
     a = my_mongodb_se()
-    a.csv2mongodb("f:/鸽药商品.csv", "test_db", "csv_test")'''
+    # data = a.my_mongo_client["com_contact"]["1"].find({"地区": {"$regex": "上海"}})
+    df = a.collection2df("com_contact", "1", query={"地区": {"$regex": "上海"}, "电话": {"$regex": "[0-9]*"}})
+    df.to_csv("f:上海.csv")
