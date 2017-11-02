@@ -1,5 +1,5 @@
 import requests
-import time
+import time,sys
 
 
 def sleep(sleep_time):
@@ -21,7 +21,7 @@ def get_source(url, my_data=None, is_ios_header=0, time_out=15):
         my_header = header
     else:
         my_header = ios_header
-    print('get_source:',url)
+    #print('get_source:',url,'\nparams:',my_data)
     r = requests.get(url, headers=my_header, params=my_data, timeout=time_out, )
     return r
 
@@ -29,5 +29,11 @@ def write_log(str_log, file_name='out_log.txt'):
     """str_log写入信息,file_name为日志文件名"""
     str_time2s = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime(time.time()))
     f = open(file_name, 'a')
-    f.write(str_time2s + " :" + str_log + '\n')
+    f.write(str_time2s + " :" + str(str_log) + '\n')
     f.close()
+
+def pro_gressbar(str_data,now_num,end_num):
+    sys.stdout.write('\r')
+    sys.stdout.write(str_data+str(now_num)+'/'+str(end_num))
+    sys.stdout.flush()  ##随时刷新到屏幕上
+    time.sleep(0.1)

@@ -1,11 +1,10 @@
-import requests
 from bs4 import BeautifulSoup
 import re
 import json
 import time
 import pandas as pd
 import multiprocessing as mp
-import my_scapy
+import my_scapy,sys
 
 
 def get_pro_detail(pro_id):
@@ -104,6 +103,21 @@ class TaoBaoKeyword:
 
     def get_info(self, flag):
         """ 获取关键词店铺商品DataFrame类型数据，flag="shop"或者flag="pro" """
+        def get_pro_extend(df):
+            a = list(df['nid'])
+            print('\n')
+            for i in range(len(a)):
+                try:
+                    my_scapy.pro_gressbar("读取商品详情:",i+1,len(a))
+                    pro_dict = get_pro_detail(a[i])
+                    pro_data = pro_dict.items()
+                    for k in pro_data:
+                        df.loc[i, k[0]] = k[1]
+                except Exception as e:
+                    my_scapy.write_log(str(e))
+                    continue
+            return df
+
         if flag == 'shop':
             my_counter = self.page_counter(self.shop_counter_url)
             my_url = 'https://shopsearch.taobao.com/search?app=shopsearch&q=' + self.key_word + '&sort=default&s='
@@ -115,6 +129,7 @@ class TaoBaoKeyword:
         pool = mp.Pool(processes=self.process_num)
         data = []
         for i in range(my_counter[1]):
+            my_scapy.pro_gressbar("读取商品页面:",i+1,my_counter[1])
             n = i * my_counter[0]
             url = my_url + str(n)
             data.append((pool.apply_async(my_scapy.get_source, args=(url,))).get().content.decode())
@@ -124,6 +139,8 @@ class TaoBaoKeyword:
         df = pd.DataFrame(keyword_data)
         df["rank"] = df.index
         df["date"] = self.str_time
+        if flag == 'pro':
+            df = get_pro_extend(df)
         return df
 
 
@@ -134,8 +151,6 @@ if __name__ == '__main__':
     #print(a)
     x = TaoBaoKeyword('三连冠鸽药')
     df1 = x.get_info('pro')
-    a = list(df1['nid'])
-    for i in a:
-       print(get_pro_detail(i))
+    df1.to_csv("f:\三连冠鸽药_商品.csv")
     #end = time.clock()
     #print(end - start)
